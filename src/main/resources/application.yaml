@@ -1,0 +1,6 @@
+ktor:
+    application:
+        modules:
+            - com.unrecorded.ApplicationKt.module
+    deployment:
+        port: 8080
