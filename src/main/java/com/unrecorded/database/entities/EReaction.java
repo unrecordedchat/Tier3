@@ -1,5 +1,22 @@
-﻿package com.unrecorded.database.entities;
+﻿/*
+ * VIA University College - School of Technology and Business
+ * Software Engineering Program - 3rd Semester Project
+ *
+ * This work is a part of the academic curriculum for the Software Engineering program at VIA University College.
+ * It is intended only for educational and academic purposes.
+ *
+ * No part of this project may be reproduced or transmitted in any form or by any means,
+ * except as permitted by VIA University and the course instructor.
+ * All rights reserved by the contributors and VIA University College.
+ *
+ * Project Name: Unrecorded
+ * Author: Sergiu Chirap
+ * Year: 2024
+ */
 
+package com.unrecorded.database.entities;
+
+import com.unrecorded.database.util.MultiTools;
 import jakarta.persistence.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -8,22 +25,46 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * HibernateORM entity representing a reaction to a message or post within the system.
+ * HibernateORM entity representing a reaction to a message within the system.
  *
- * @author Sergiu Chirap
- * @version 1.0
+ * <p>This entity maps to the "reactions" table in the "unrecorded" schema and
+ * represents user interactions with messages, such as likes or other emoji reactions.</p>
+ *
+ * <h2>Entity Relationships:</h2>
+ * <ul>
+ *   <li>Each reaction is associated with a specific user and message,
+ *   tracked using a composite primary key (`ReactionId`).</li>
+ *   <li>Reactions reference user entities (`user_id`) and message entities (`message_id`) as foreign keys.</li>
+ * </ul>
+ *
+ * <p><b>Composite Primary Key:</b> The `ReactionId` class combines the user ID, message ID, and emoji,
+ * guaranteeing that each user can only have one type of reaction (e.g., a single emoji) per message.</p>
+ *
+ * <h2>Key Features:</h2>
+ * <ul>
+ *   <li>Supports user-to-message reactions with flexibility for different types of emojis.</li>
+ *   <li>Designed with auditability and extensibility for various interactive features.</li>
+ *   <li>Handles composite-key-based operations seamlessly using the embedded key `ReactionId`.</li>
+ * </ul>
+ *
+ * <p><b>Note:</b> This entity enforces cross-entity consistency via foreign key constraints in the database schema.</p>
+ *
+ * @author Sergiu
+ * @version 1.1
+ * @see com.unrecorded.database.repositories.ReactionPSQL ReactionPSQL
  * @since PREVIEW
  */
 @Entity
-@Table(name = "Reactions", schema = "unrecorded")
+@Table(name = "reactions", schema = "unrecorded")
 public class EReaction {
 
     /**
      * Represents the composite primary key for the entity.
      */
     @EmbeddedId
+    @NotNull
     private ReactionId id;
-    
+
     /**
      * Default constructor required by JPA.
      */
@@ -33,12 +74,12 @@ public class EReaction {
     /**
      * Constructs an EReaction object with a unique identifier that associates a user, a message, and a reaction type.
      *
-     * @param userId a unique identifier for the user expressing the reaction; cannot be null
-     * @param messageId a unique identifier for the message receiving the reaction; cannot be null
-     * @param type the type of the reaction being expressed (e.g., 'like', 'love'); cannot be null
+     * @param userId    A unique identifier for the user expressing the reaction.
+     * @param messageId A unique identifier for the message receiving the reaction.
+     * @param emoji     The emoji reaction being expressed.
      */
-    public EReaction(@NotNull UUID userId, @NotNull UUID messageId, @NotNull String type) {
-        this.id = new ReactionId(userId, messageId, type);
+    public EReaction(@NotNull UUID userId, @NotNull UUID messageId, @NotNull String emoji) {
+        this.id = new ReactionId(userId, messageId, emoji);
     }
 
     /**
@@ -46,7 +87,7 @@ public class EReaction {
      *
      * @return The {@link ReactionId} associated with this instance.
      */
-    public ReactionId getId() {
+    public @NotNull ReactionId getId() {
         return id;
     }
 
@@ -68,8 +109,8 @@ public class EReaction {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return id.equals(o);
-        return id.equals(((EReaction) o).id);
+        if (!(o instanceof EReaction that)) return false;
+        return Objects.equals(id, that.id);
     }
 
     /**
@@ -91,34 +132,60 @@ public class EReaction {
     public String toString() {
         return id.toString();
     }
-    
 
     /**
-     * Represents a composite key for the Reaction entity, encompassing user ID, message ID, and the emoji used in the reaction.
+     * Represents a composite primary key for the {@link EReaction} entity, uniquely
+     * identifying a user's reaction to a specific message in the system.
+     *
+     * <p>The composite key is composed of three attributes:</p>
+     * <ul>
+     *   <li>{@link #userId}: Identifies the user reacting to the message.</li>
+     *   <li>{@link #messageId}: Identifies the message receiving the reaction.</li>
+     *   <li>{@link #emoji}: Specifies the exact emoji reaction used.</li>
+     * </ul>
+     *
+     * <h2>Purpose:</h2>
+     * <ul>
+     *   <li>Ensures uniqueness of reactions by combining user, message, and emoji details.</li>
+     *   <li>Prevents duplicate same reactions by the same user on the same message.</li>
+     *   <li>Serves as a flexible design for incorporating various reaction types (e.g., emojis) easily.</li>
+     * </ul>
+     *
+     * <h2>Usage:</h2>
+     * <ul>
+     *   <li>This key is embedded in the {@link EReaction} class as a unique identifier.</li>
+     *   <li>Supports JPA's persistence conventions for composite primary keys through the {@link Embeddable} annotation.</li>
+     * </ul>
+     * 
+     * <h2>Cross-Entity Constraints:</h2>
+     * <p>This composite key is also linked to referential integrity constraints in the database schema,
+     * ensuring valid relationships between users, messages, and their reactions.</p>
+     *
+     * <b>Note:</b> This composite key supports extensibility for reaction-related features and future enhancements.
      *
      * @author Sergiu Chirap
      * @version 1.0
-     * @see EReaction
+     * @see com.unrecorded.database.entities.EReaction
      * @since PREVIEW
      */
     @Embeddable
     public static class ReactionId implements Serializable {
         /**
-         * Represents the unique identifier for a user within a reaction context.
+         * Unique identifier for the user expressing the reaction.
          */
-        @Column(name = "userId", nullable = false)
+        @Column(name = "user_id", nullable = false)
         @NotNull
         private UUID userId;
 
         /**
-         * Represents the unique identifier for a message within a reaction context.
+         * Unique identifier for the message being reacted to.
          */
-        @Column(name = "messageId", nullable = false)
+        @Column(name = "message_id", nullable = false)
         @NotNull
         private UUID messageId;
 
         /**
-         * Represents the emoji associated with the reaction of a message.
+         * Emoji representing the specific reaction.
          */
         @Column(name = "emoji", nullable = false)
         @NotNull
@@ -206,8 +273,7 @@ public class EReaction {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ReactionId that = (ReactionId) o;
+            if (!(o instanceof ReactionId that)) return false;
             return Objects.equals(userId, that.userId) && Objects.equals(messageId, that.messageId) && Objects.equals(emoji, that.emoji);
         }
 
@@ -219,7 +285,7 @@ public class EReaction {
          */
         @Override
         public int hashCode() {
-            return Objects.hash(userId, messageId, emoji);
+            return MultiTools.hash(userId, messageId, emoji);
         }
 
         /**

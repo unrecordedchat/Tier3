@@ -41,9 +41,9 @@ public class MessagePSQL implements IMessageRepo {
      * @param contentEncrypted The encrypted content of the message. Must not be null.
      * @throws DataAccessException If there is an issue accessing the database during message creation.
      */
-    public void createMessage(@NotNull UUID senderId, @Nullable UUID recipientId, boolean isGroup, @NotNull String contentEncrypted) throws DataAccessException {
+    public void createMessage(@NotNull UUID senderId, @Nullable UUID recipientId, @Nullable UUID groupId, boolean isGroup, @NotNull String contentEncrypted) throws DataAccessException {
         if (logger.isDebugEnabled()) logger.debug("Creating message from senderId: {}", senderId);
-        EMessage message = new EMessage(senderId, recipientId, isGroup, contentEncrypted);
+        EMessage message = new EMessage(senderId, recipientId, groupId, isGroup, contentEncrypted);
         try (Session session = DBA.getSessionFactory().openSession()) {
             Transaction transaction = session.beginTransaction();
             try {

@@ -1,6 +1,14 @@
+# VIA University College - Software Engineering Program - 3rd Semester Project
+#
+# Project Name: Unrecorded
+# Author: Sergiu Chirap, 2024
+#
+# Intended for educational purposes only.
+# All rights reserved.
+
 ktor:
-    application:
-        modules:
-            - com.unrecorded.ApplicationKt.module
-    deployment:
-        port: 8080
+  application:
+    modules:
+      - com.unrecorded.ApplicationKt.module
+  deployment:
+    port: 8080

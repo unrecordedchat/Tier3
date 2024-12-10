@@ -1,45 +1,74 @@
-﻿package com.unrecorded.database.entities;
+﻿/*
+ * VIA University College - School of Technology and Business
+ * Software Engineering Program - 3rd Semester Project
+ *
+ * This work is a part of the academic curriculum for the Software Engineering program at VIA University College.
+ * It is intended only for educational and academic purposes.
+ *
+ * No part of this project may be reproduced or transmitted in any form or by any means,
+ * except as permitted by VIA University and the course instructor.
+ * All rights reserved by the contributors and VIA University College.
+ *
+ * Project Name: Unrecorded
+ * Author: Sergiu Chirap
+ * Year: 2024
+ */
 
+package com.unrecorded.database.entities;
+
+import com.unrecorded.database.util.MultiTools;
 import jakarta.persistence.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.UUID;
 
 /**
- * HibernateORM entity representing a group in the system.
+ * HibernateORM entity representing a group within the system.
+ *
+ * <p>This entity models the fundamental aspects of a group, such as group name and ownership,
+ * allowing for the organization of users into cohesive units. 
+ * A UUID uniquely identifies each group, with one user serving as the group's administrator.</p>
+ *
+ * <h2>Entity Relationships:</h2>
+ * <ul>
+ *   <li>Managed by a single administrator, referenced by {@code ownerId}, facilitating group management operations.</li>
+ *   <li>Has potential relationships with {@code EUser} and {@code EGroupMembership} entities
+ *   to manage users within the group.</li>
+ * </ul>
  *
  * @author Sergiu Chirap
- * @version 1.0
- * @see com.unrecorded.database.repositories.IGroupRepo IGroupRepo
+ * @see com.unrecorded.database.repositories.GroupPSQL GroupPSQL
+ * @version 1.1
  * @since PREVIEW
  */
 @Entity
-@Table(name = "Groups", schema = "unrecorded")
+@Table(name = "groups", schema = "unrecorded")
 public class EGroup {
 
     /**
-     * Represents the unique identifier for a user. This identifier is automatically
-     * generated using a UUID strategy, ensuring global uniqueness.
-     * <p>This field cannot be updated once set.
+     * Represents the unique identifier for a group.
+     * <p>This value is automatically generated and immutable once set.
+     * It is crucial in distinguishing each group within the system.</p>
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "groupId", nullable = false, updatable = false)
-    @NotNull
-    private UUID groupId;
+    @Column(name = "group_id", nullable = false, updatable = false)
+    @Nullable
+    private UUID id;
 
     /**
      * Represents the name of the group within the system.
      */
-    @Column(name = "groupName", nullable = false)
+    @Column(name = "group_name", nullable = false)
     @NotNull
     private String name;
 
     /**
-     * Represents the unique identifier for the administrator of the group.
+     * Represents the unique identifier for the group administrator.
+     * <p>This ID links to the user's unique identifier who holds administrative privileges over the group.</p>
      */
-    @Column(name = "adminId", nullable = false)
+    @Column(name = "admin_id", nullable = false)
     @NotNull
     private UUID ownerId;
 
@@ -50,10 +79,10 @@ public class EGroup {
     }
 
     /**
-     * Constructs a new EGroup with the specified name and owner ID.
+     * Constructs a new EGroup instance with a specified name and owner ID.
      *
-     * @param name The name of the group, which cannot be null
-     * @param ownerId The unique identifier for the administrator of the group, which cannot be null
+     * @param name The name of the group.
+     * @param ownerId The UUID of the group's administrator.
      */
     public EGroup(@NotNull String name, @NotNull UUID ownerId) {
         this.name = name;
@@ -63,16 +92,16 @@ public class EGroup {
     /**
      * Retrieves the unique identifier for the group.
      *
-     * @return The UUID representing the unique identifier of the group
+     * @return The UUID representing the group's unique identifier. It may be null if not yet persisted.
      */
-    public @NotNull UUID getGroupId() {
-        return groupId;
+    public @Nullable UUID getId() {
+        return id;
     }
 
     /**
      * Retrieves the name of the group.
      *
-     * @return The name of the group.
+     * @return A string representing the group's name.
      */
     public @NotNull String getName() {
         return name;
@@ -81,61 +110,60 @@ public class EGroup {
     /**
      * Sets the name of the group.
      *
-     * @param name The name to be assigned to the group.
+     * @param name The name to assign to the group.
      */
     public void setName(@NotNull String name) {
         this.name = name;
     }
 
     /**
-     * Retrieves the unique identifier for the administrator of the group.
+     * Retrieves the unique identifier for the group's administrator.
      *
-     * @return The UUID representing the unique identifier of the group's administrator.
+     * @return The UUID representing the unique identifier of the administrator.
      */
     public @NotNull UUID getOwnerId() {
         return ownerId;
     }
 
     /**
-     * Sets the unique identifier for the administrator of the group.
+     * Sets the unique identifier for the group's administrator.
      *
-     * @param ownerId The unique identifier for the administrator of the group.
+     * @param ownerId The UUID representing the administrator's unique identifier.
      */
     public void setOwnerId(@NotNull UUID ownerId) {
         this.ownerId = ownerId;
     }
 
     /**
-     * Compares this EGroup instance with another object to determine equality.
+     * Compares this EGroup instance with another object for equality.
      *
      * @param o The object to be compared for equality with this EGroup.
-     * @return True if the specified object is equal to this EGroup; false otherwise.
+     * @return True if the specified object is equivalent to this EGroup; false otherwise.
      */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        EGroup that = (EGroup) o;
-        return groupId.equals(that.groupId) && name.equals(that.name) && ownerId.equals(that.ownerId);
+        if (!(o instanceof EGroup that)) return false;
+        return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(ownerId, that.ownerId);
     }
 
     /**
-     * Computes a hash code for this EGroup instance based on its groupId, name, and ownerId properties.
+     * Computes a hash code for this EGroup instance based on its fields.
      *
      * @return An integer representing the computed hash code.
      */
     @Override
     public int hashCode() {
-        return Objects.hash(groupId, name, ownerId);
+        return MultiTools.hash(id, name, ownerId);
     }
 
     /**
-     * Returns a string representation of the EGroup object.
+     * Returns a string representation of the EGroup entity, ideal for debugging and logging.
      *
-     * @return A string representing the instance in a structured format.
+     * @return A string representing this instance in a structured, readable format.
      */
     @Override
     public String toString() {
-        return String.format("// HibernateORM Entity 'Group':\n Id: %s\n Name: %s\n Owner: %s //\n", groupId, name, ownerId);
+        return String.format("// HibernateORM Entity 'Group':\n ID: %s\n Name: %s\n Owner: %s //", id, name, ownerId);
     }
 }

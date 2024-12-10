@@ -1,43 +1,129 @@
-﻿<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    VIA University College - School of Technology and Business
+    Software Engineering Program - 3rd Semester Project
+
+    This work is a part of the academic curriculum for the Software Engineering program at VIA University College.
+    It is intended only for educational and academic purposes.
+
+    No part of this project may be reproduced or transmitted in any form or by any means,
+    except as permitted by VIA University and the course instructor.
+    All rights reserved by the contributors and VIA University College.
+
+    Project Name: Unrecorded
+    Author: Sergiu Chirap
+    Year: 2024
+-->
+
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
         "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
+        <!-- ============================ -->
+        <!-- Database Connection Settings -->
+        <!-- ============================ -->
+
+        <!-- Database driver -->
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
 
-        <!-- Using environment variables for sensitive information -->
-        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/${UnDB_NAME}?sslmode=require</property>
+        <!-- Database connection URL -->
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/${UnDB_NAME}?sslmode=require
+        </property>
+
+        <!-- User credentials -->
         <property name="hibernate.connection.username">${UnDB_USER}</property>
         <property name="hibernate.connection.password">${UnDB_PASSWORD}</property>
+        
+        <!-- 
+            NOTE: 
+                These environment variables (${UnDB_NAME}, ${UnDB_USER}, ${UnDB_PASSWORD})
+                are configured in the `setup_db.sh` and used in `setup.sql`.
+                Ensure the scripts are run first. 
+        -->
 
-        <!-- SSL Configuration -->
+        <!-- Database Schema -->
+        <property name="hibernate.default_schema">unrecorded</property>
+
+        <!-- =================== -->
+        <!--  SSL Configuration  -->
+        <!-- =================== -->
+
+        <!-- Enable SSL -->
         <property name="hibernate.connection.ssl">true</property>
+
+        <!-- Use NonValidatingFactory for SSL -->
         <property name="hibernate.connection.sslfactory">org.postgresql.ssl.NonValidatingFactory</property>
 
-        <!-- C3P0 Configuration -->
-        <property name="hibernate.c3p0.min_size">5</property>
-        <property name="hibernate.c3p0.max_size">20</property>
-        <property name="hibernate.c3p0.timeout">300</property>
-        <property name="hibernate.c3p0.max_statements">50</property>
-        <property name="hibernate.c3p0.idle_test_period">3000</property>
+        <!-- ============================= -->
+        <!-- Connection Pool Configuration -->
+        <!-- ============================= -->
+        
+        <!-- Ensure sufficient connections for basic traffic -->
+        <property name="hibernate.c3p0.min_size">10</property>
+        
+        <!-- Allow up to 50 concurrent connections -->
+        <property name="hibernate.c3p0.max_size">50</property>
+        
+        <!-- Close idle connections after 10 minutes -->
+        <property name="hibernate.c3p0.timeout">600</property>
+        
+        <!-- Improve query performance -->
+        <property name="hibernate.c3p0.max_statements">200</property>
+        
+        <!-- Test idle connections every 5 minutes -->
+        <property name="hibernate.c3p0.idle_test_period">300</property>
 
-        <!-- Session and SQL settings -->
+        <!-- =========================== -->
+        <!-- Hibernate Schema Management -->
+        <!-- =========================== -->
+
+        <!-- Validate database schema against entity definitions -->
+        <property name="hibernate.hbm2ddl.auto">validate</property>
+        <!-- NOTE: Use 'validate' or 'none' to avoid conflicts with database pre-configured using `setup.sql`. -->
+
+        <!-- Bind Hibernate Session to the current thread -->
         <property name="hibernate.current_session_context_class">thread</property>
-        <property name="hibernate.connection.autocommit">false</property>
-        <property name="hibernate.default_schema">unrecorded</property>
-        <property name="hibernate.show_sql">true</property>
-        <property name="hibernate.format_sql">true</property>
-        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
-        <property name="hibernate.id.new_generator_mappings">true</property>
 
-        <!-- Mapping Classes -->
+        <!-- Disable auto-commit to enforce explicit transaction handling -->
+        <property name="hibernate.connection.autocommit">false</property>
+
+        <!-- Specify PostgreSQL as the target database dialect -->
+        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+
+        <!-- Enable modern ID generator strategies (JPA 2.x compliant). -->
+        <property name="hibernate.id.new_generator_mappings">true</property>
+        <!-- NOTE: Optional, useful for future scalability and changes in ID generation strategies. -->
+
+        <!-- =================== -->
+        <!--   Mapped Entities   -->
+        <!-- =================== -->
+
+        <!-- Represents application users -->
         <mapping class="com.unrecorded.database.entities.EUser"/>
+        
+        <!-- Tracks friendship relations between users -->
         <mapping class="com.unrecorded.database.entities.EFriendship"/>
+
+        <!-- Groups and their details -->
         <mapping class="com.unrecorded.database.entities.EGroup"/>
+
+        <!-- Represents members of the groups -->
         <mapping class="com.unrecorded.database.entities.EGroupMember"/>
+
+        <!-- Represents user messages and their content -->
         <mapping class="com.unrecorded.database.entities.EMessage"/>
+
+        <!-- Records reactions (e.g., likes, emojis) to messages -->
         <mapping class="com.unrecorded.database.entities.EReaction"/>
+        
+        <!-- Manages user login sessions and tracks their expiration. -->
         <mapping class="com.unrecorded.database.entities.ESession"/>
+
+        <!-- Handles system notifications for users. -->
         <mapping class="com.unrecorded.database.entities.ENotification"/>
+
+        <!-- Custom data access exception for database-specific errors -->
         <mapping class="com.unrecorded.database.exceptions.DataAccessException"/>
     </session-factory>
 </hibernate-configuration>
