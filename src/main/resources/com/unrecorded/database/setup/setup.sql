@@ -37,12 +37,12 @@ CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 -- Create 'Users' table to manage user account information, enforce unique constraints for core identifiers.
 CREATE TABLE IF NOT EXISTS postgres.unrecorded.users (
-    user_id               UUID PRIMARY KEY DEFAULT uuid_generate_v4() NOT NULL,        -- User ID as a primary key with default UUID.
-    username              VARCHAR(30)                                 NOT NULL UNIQUE, -- Enforcing unique usernames.
+    user_id               UUID PRIMARY KEY DEFAULT uuid_generate_v4() NOT NULL,                                   -- User ID as a primary key with default UUID.
+    username              VARCHAR(30)                                 NOT NULL UNIQUE,                            -- Enforcing unique usernames.
     password_hash         VARCHAR                                     NOT NULL,
     password_salt         BYTEA                                       NOT NULL,
-    email                 VARCHAR(254)                                NOT NULL UNIQUE, -- Unique email for communication.
-    public_key            TEXT                                        NOT NULL UNIQUE, -- Public key for encryption.
+    email                 VARCHAR(254)                                NOT NULL CHECK (email LIKE '%@%.%') UNIQUE, -- Unique email for communication.
+    public_key            TEXT                                        NOT NULL UNIQUE,                            -- Public key for encryption.
     private_key_encrypted TEXT                                        NOT NULL
 );
 
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS postgres.unrecorded.users (
 CREATE TABLE IF NOT EXISTS postgres.unrecorded.friendships (
     user_id_1 UUID REFERENCES users (user_id) ON UPDATE CASCADE ON DELETE CASCADE,    -- Handles user deletions seamlessly.
     user_id_2 UUID REFERENCES users (user_id) ON UPDATE CASCADE ON DELETE CASCADE,
-    status    CHAR(3) CHECK (status IN ('FRD', 'UNK', 'PND')) NOT NULL DEFAULT 'UNK', -- Possible statuses: FRD (Friend), UNK (Unknown), PND (Pending).
+    status    CHAR(3) CHECK (status IN ('FRD', 'UNK', 'PND')) DEFAULT 'UNK' NOT NULL, -- Possible statuses: FRD (Friend), UNK (Unknown), PND (Pending).
     PRIMARY KEY (user_id_1, user_id_2)
 );
 

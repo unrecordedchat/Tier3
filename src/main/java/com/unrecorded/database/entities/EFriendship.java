@@ -16,7 +16,7 @@
 
 package com.unrecorded.database.entities;
 
-import com.unrecorded.database.util.MultiTools;
+import com.unrecorded.database.util.MiscUtils;
 import jakarta.persistence.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -136,7 +136,7 @@ public class EFriendship {
      */
     @Override
     public int hashCode() {
-        return MultiTools.hash(id, status);
+        return MiscUtils.hash(id, status);
     }
 
     /**
@@ -269,7 +269,7 @@ public class EFriendship {
          */
         @Override
         public int hashCode() {
-            return MultiTools.hash(userId1, userId2);
+            return MiscUtils.hash(userId1, userId2);
         }
 
         /**

@@ -16,7 +16,7 @@
 
 package com.unrecorded.database.entities;
 
-import com.unrecorded.database.util.MultiTools;
+import com.unrecorded.database.util.MiscUtils;
 import jakarta.persistence.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -274,7 +274,7 @@ public class EUser {
      */
     @Override
     public int hashCode() {
-        return MultiTools.hash(id, username, passHash, email, publicKey, privateKey);
+        return MiscUtils.hash(id, username, passHash, email, publicKey, privateKey);
     }
 
     /**

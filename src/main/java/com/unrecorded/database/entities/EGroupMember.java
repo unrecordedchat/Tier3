@@ -16,7 +16,7 @@
 
 package com.unrecorded.database.entities;
 
-import com.unrecorded.database.util.MultiTools;
+import com.unrecorded.database.util.MiscUtils;
 import jakarta.persistence.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -136,7 +136,7 @@ public class EGroupMember {
      */
     @Override
     public int hashCode() {
-        return MultiTools.hash(id, role);
+        return MiscUtils.hash(id, role);
     }
 
     /**
@@ -265,7 +265,7 @@ public class EGroupMember {
          */
         @Override
         public int hashCode() {
-            return MultiTools.hash(groupId, userId);
+            return MiscUtils.hash(groupId, userId);
         }
 
         /**

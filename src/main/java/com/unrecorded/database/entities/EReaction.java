@@ -16,7 +16,7 @@
 
 package com.unrecorded.database.entities;
 
-import com.unrecorded.database.util.MultiTools;
+import com.unrecorded.database.util.MiscUtils;
 import jakarta.persistence.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -285,7 +285,7 @@ public class EReaction {
          */
         @Override
         public int hashCode() {
-            return MultiTools.hash(userId, messageId, emoji);
+            return MiscUtils.hash(userId, messageId, emoji);
         }
 
         /**

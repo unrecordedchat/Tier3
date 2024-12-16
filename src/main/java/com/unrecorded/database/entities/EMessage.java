@@ -16,14 +16,17 @@
 
 package com.unrecorded.database.entities;
 
-import com.unrecorded.database.util.MultiTools;
-import jakarta.persistence.*;
+import com.unrecorded.database.util.MiscUtils;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.UUID;
-import java.time.ZonedDateTime;
 
 /**
  * HibernateORM entity representing a message in the system.
@@ -333,7 +336,7 @@ public class EMessage {
      */
     @Override
     public int hashCode() {
-        return MultiTools.hash(id, senderId, deletedSender, recipientId, deletedRecipient, groupId, isGroup, contentEncrypted, timestamp, isDeleted);
+        return MiscUtils.hash(id, senderId, deletedSender, recipientId, deletedRecipient, groupId, isGroup, contentEncrypted, timestamp, isDeleted);
     }
 
     /**

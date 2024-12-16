@@ -15,7 +15,6 @@ version = "0.0.1"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
-
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
@@ -39,6 +38,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("org.postgresql:postgresql:$postgresVersion")
     implementation("org.hibernate.orm:hibernate-core:7.0.0.Beta1")
+    implementation("de.mkammerer:argon2-jvm:2.11")
     implementation("jakarta.transaction:jakarta.transaction-api")
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$ktVersion")

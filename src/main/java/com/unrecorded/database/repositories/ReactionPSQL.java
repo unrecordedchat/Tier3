@@ -1,119 +1,148 @@
-﻿package com.unrecorded.database.repositories;
+﻿/*
+ * VIA University College - School of Technology and Business
+ * Software Engineering Program - 3rd Semester Project
+ *
+ * This work is a part of the academic curriculum for the Software Engineering program at VIA University College.
+ * It is intended only for educational and academic purposes.
+ *
+ * No part of this project may be reproduced or transmitted in any form or by any means,
+ * except as permitted by VIA University and the course instructor.
+ * All rights reserved by the contributors and VIA University College.
+ *
+ * Project Name: Unrecorded
+ * Author: Sergiu Chirap
+ * Year: 2024
+ */
 
-import com.unrecorded.database.DBA;
+package com.unrecorded.database.repositories;
+
 import com.unrecorded.database.entities.EReaction;
 import com.unrecorded.database.entities.EReaction.ReactionId;
 import com.unrecorded.database.exceptions.DataAccessException;
-import com.unrecorded.database.exceptions.TypeOfDAE;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import com.unrecorded.database.util.FieldValidator;
+import com.unrecorded.database.util.HibernateUtil;
+import com.unrecorded.database.util.LoggerUtil;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
 
 /**
- * This class manages operations related to reactions, including creation, retrieval, updating, and deletion.
- * <p>Uses HibernateORM to save in a PostgreSQL database.</p>
+ * This class manages database operations for reactions, including creation, retrieval, deletion, and soft deletion.
+ *
+ * <p><b>Purpose:</b> The `ReactionPSQL` class implements the `IReactionRepo` interface,
+ * providing methods for performing CRUD operations on reactions while adhering
+ * to input validation, logging, and transaction management best practices.</p>
+ *
+ * <h2>Features:</h2>
+ * <ul>
+ *   <li>Field validation for emoji constraints and composite key validation.</li>
+ *   <li>Efficient retrieval of reactions using Hibernate queries.</li>
+ *   <li>Structured and secure logging for all operations using {@link LoggerUtil}.</li>
+ *   <li>Thread-safe and reusable transaction handling via {@link HibernateUtil}.</li>
+ * </ul>
  *
  * @author Sergiu Chirap
- * @version 1.0
- * @see com.unrecorded.database.entities.EReaction EReaction
- * @see com.unrecorded.database.DBA DBA
- * @since PREVIEW
+ * @version 2.0
+ * @see EReaction
+ * @see HibernateUtil
+ * @since 0.2
  */
 public class ReactionPSQL implements IReactionRepo {
 
     /**
-     * Logger for recording events and debugging information within the ReactionPSQL class.
-     */
-    private static final Logger logger = LoggerFactory.getLogger(ReactionPSQL.class);
-
-    /**
-     * Creates a new reaction in the database.
+     * Creates and saves a new reaction in the database.
      *
-     * @param userId    The UUID of the user. Must not be null.
-     * @param messageId The UUID of the message. Must not be null.
-     * @param type      The type of the reaction. Must not be null.
-     * @throws DataAccessException If there is an issue accessing the database during reaction creation.
+     * <p>This method validates the required parameters, constructs a reaction entity,
+     * and persists it in the database.</p>
+     *
+     * @param userId    The UUID of the user reacting.
+     * @param messageId The UUID of the message being reacted to.
+     * @param emoji     The emoji used for the reaction. Must not be empty and should meet allowed emoji constraints.
+     * @throws IllegalArgumentException If validation fails for any input parameters.
+     * @throws DataAccessException      If there is an issue with the database operation.
      */
-    public void createReaction(@NotNull UUID userId, @NotNull UUID messageId, @NotNull String type) throws DataAccessException {
-        if (logger.isDebugEnabled())
-            logger.debug("Creating reaction: userId={}, messageId={}, type={}", userId, messageId, type);
-        EReaction reaction = new EReaction(userId, messageId, type);
-        try (Session session = DBA.getSessionFactory().openSession()) {
-            Transaction transaction = session.beginTransaction();
-            try {
-                session.persist(reaction);
-                transaction.commit();
-                logger.info("Reaction created successfully: {}", reaction);
-            } catch (Exception e) {
-                if (transaction != null) transaction.rollback();
-                logger.error("Exception while creating reaction.", e);
-                throw new DataAccessException(TypeOfDAE.INS, "Error while creating reaction.", e, false, false);
-            }
-        }
+    @Override
+    public void createReaction(@NotNull UUID userId, @NotNull UUID messageId, @NotNull String emoji) throws IllegalArgumentException, DataAccessException {
+        FieldValidator.emojiConstraints(emoji);
+        LoggerUtil.logInfo("Creating reaction for user " + userId + ", message {}, emoji {}", messageId.toString(), emoji);
+        HibernateUtil.executeTransaction(true, session -> {
+            EReaction existingReaction = getReaction(userId, messageId, emoji);
+            if (existingReaction != null) throw new IllegalArgumentException("Reaction already exists.");
+            EReaction reaction = new EReaction(userId, messageId, emoji);
+            session.persist(reaction);
+            LoggerUtil.logInfo("Reaction created successfully: {}", reaction.toString());
+            return null;
+        });
     }
 
     /**
-     * Retrieves a reaction from the database by its composite key.
+     * Retrieves a reaction by its composite primary key.
      *
-     * @param userId    The UUID of the user.
-     * @param messageId The UUID of the message.
-     * @param type      The type of the reaction.
-     * @return The EReaction object corresponding to the specified composite key, or null if no reaction is found.
+     * @param userId    The UUID of the user who reacted.
+     * @param messageId The UUID of the message that received the reaction.
+     * @param emoji     The emoji used in the reaction.
+     * @return The corresponding {@link EReaction} entity, or {@code null} if not found.
+     * @throws IllegalArgumentException If any input parameter is invalid.
+     * @throws DataAccessException      If an error occurs during the database query.
      */
-    public EReaction getReaction(@NotNull UUID userId, @NotNull UUID messageId, @NotNull String type) {
-        if (logger.isDebugEnabled())
-            logger.debug("Retrieving reaction: userId={}, messageId={}, type={}", userId, messageId, type);
-        try (Session session = DBA.getSessionFactory().openSession()) {
-            ReactionId id = new ReactionId(userId, messageId, type);
-            return session.find(EReaction.class, id);
-        }
+    @Override
+    public @Nullable EReaction getReaction(@NotNull UUID userId, @NotNull UUID messageId, @NotNull String emoji) throws IllegalArgumentException, DataAccessException {
+        FieldValidator.emojiConstraints(emoji);
+        LoggerUtil.logInfo("Fetching reaction for user " + userId + ", message {}, emoji {}", messageId.toString(), emoji);
+        return HibernateUtil.executeTransaction(false, session -> {
+            ReactionId reactionId = new ReactionId(userId, messageId, emoji);
+            EReaction reaction = session.find(EReaction.class, reactionId);
+            if (reaction != null) LoggerUtil.logDebug("Reaction retrieved: {}", reaction.toString());
+            else
+                LoggerUtil.logWarn("No reaction found for user " + userId + ", message " + messageId + ", emoji " + emoji + "");
+            return reaction;
+        });
     }
 
     /**
-     * Deletes a reaction from the database by its composite key.
+     * Retrieves all reactions associated with a specific message.
      *
-     * @param userId    The UUID of the user.
-     * @param messageId The UUID of the message.
-     * @param type      The type of the reaction.
-     * @throws DataAccessException If there is an issue with the database deletion.
+     * <p>This method fetches all reactions from the `reactions` table in the database that belong
+     * to a specific message, ordered by default criteria (e.g., insertion order).</p>
+     *
+     * @param messageId The UUID of the target message being queried.
+     * @return A list of {@link EReaction} entities corresponding to the specified message.
+     * @throws DataAccessException If the database query fails.
      */
-    public void deleteReaction(@NotNull UUID userId, @NotNull UUID messageId, @NotNull String type) throws DataAccessException {
-        if (logger.isDebugEnabled())
-            logger.debug("Deleting reaction: userId={}, messageId={}, type={}", userId, messageId, type);
-        try (Session session = DBA.getSessionFactory().openSession()) {
-            Transaction transaction = session.beginTransaction();
-            try {
-                EReaction reaction = getReaction(userId, messageId, type);
-                if (reaction != null) {
-                    session.remove(reaction);
-                    transaction.commit();
-                    logger.info("Reaction deleted successfully: {}", reaction);
-                } else logger.warn("Reaction not found: userId={}, messageId={}, type={}", userId, messageId, type);
-            } catch (Exception e) {
-                if (transaction != null) transaction.rollback();
-                logger.error("Exception while deleting reaction.", e);
-                throw new DataAccessException(TypeOfDAE.DEL, "Error while deleting reaction.", e, false, false);
-            }
-        }
+    @Override
+    public @Nullable List<EReaction> getReactionsForMessage(@NotNull UUID messageId) throws DataAccessException {
+        LoggerUtil.logInfo("Fetching all reactions for messageId={}", messageId.toString());
+        return HibernateUtil.executeTransaction(false, session -> {
+            List<EReaction> reactions = session.createQuery("FROM EReaction WHERE id.messageId = :messageId", EReaction.class).setParameter("messageId", messageId).list();
+            LoggerUtil.logInfo("Fetched {} reactions for messageId={}", String.valueOf(reactions.size()), messageId.toString());
+            return reactions;
+        });
     }
 
     /**
-     * Retrieves all reactions for a specific message.
+     * Deletes a reaction from the database using its composite key.
      *
-     * @param messageId The UUID of the message.
-     * @return A list of EReaction objects corresponding to the specified message.
+     * @param userId    The UUID of the user who reacted.
+     * @param messageId The UUID of the message that received the reaction.
+     * @param emoji     The emoji used in the reaction.
+     * @throws IllegalArgumentException If validation fails for the input parameters.
+     * @throws DataAccessException      If the database operation fails.
      */
-    public @NotNull List<EReaction> getReactionsForMessage(@NotNull UUID messageId) {
-        if (logger.isDebugEnabled()) logger.debug("Retrieving reactions for messageId: {}", messageId);
-        try (Session session = DBA.getSessionFactory().openSession()) {
-            return session.createQuery("FROM EReaction WHERE messageId = :messageId", EReaction.class)
-                    .setParameter("messageId", messageId)
-                    .list();
-        }
+    @Override
+    public void deleteReaction(@NotNull UUID userId, @NotNull UUID messageId, @NotNull String emoji) throws IllegalArgumentException, DataAccessException {
+        FieldValidator.emojiConstraints(emoji);
+        LoggerUtil.logInfo("Deleting reaction for user " + userId + ", messageId={}, emoji={}", messageId.toString(), emoji);
+        HibernateUtil.executeTransaction(true, session -> {
+            ReactionId id = new ReactionId(userId, messageId, emoji);
+            EReaction reaction = session.find(EReaction.class, id);
+            if (reaction != null) {
+                session.remove(reaction);
+                LoggerUtil.logInfo("Reaction deleted successfully: {}", reaction.toString());
+            } else
+                LoggerUtil.logWarn("No reaction found to delete for user " + userId + ", message " + messageId + ", emoji " + emoji);
+            return null;
+        });
     }
 }

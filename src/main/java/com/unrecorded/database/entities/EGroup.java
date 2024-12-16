@@ -16,8 +16,11 @@
 
 package com.unrecorded.database.entities;
 
-import com.unrecorded.database.util.MultiTools;
-import jakarta.persistence.*;
+import com.unrecorded.database.util.MiscUtils;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -154,7 +157,7 @@ public class EGroup {
      */
     @Override
     public int hashCode() {
-        return MultiTools.hash(id, name, ownerId);
+        return MiscUtils.hash(id, name, ownerId);
     }
 
     /**
