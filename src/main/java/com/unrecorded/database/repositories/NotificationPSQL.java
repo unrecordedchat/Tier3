@@ -1,4 +1,4 @@
-﻿/*
+/*
  * VIA University College - School of Technology and Business
  * Software Engineering Program - 3rd Semester Project
  *
@@ -54,7 +54,7 @@ import java.util.UUID;
  * @see com.unrecorded.database.util.HibernateUtil
  * @since 0.3
  */
-public class NotificationPSQL {
+public class NotificationPSQL implements INotificationRepo {
 
     /**
      * Creates and saves a new notification in the database.

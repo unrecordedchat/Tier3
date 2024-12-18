@@ -1,0 +1,104 @@
+<!--
+    VIA University College - School of Technology and Business
+    Software Engineering Program - 3rd Semester Project
+
+    This work is a part of the academic curriculum for the Software Engineering program at VIA University College.
+    It is intended only for educational and academic purposes.
+
+    No part of this project may be reproduced or transmitted in any form or by any means,
+    except as permitted by VIA University and the course instructor.
+    All rights reserved by the contributors and VIA University College.
+
+    Project Name: Unrecorded
+    Author: Sergiu Chirap
+    Year: 2024
+-->
+
+<configuration>
+    <!-- Define the logging pattern as a property -->
+    <!-- The LOG_PATTERN specifies the format of log messages used across all appenders -->
+    <property name="LOG_PATTERN" value="%d{dd-MM-yyyy hh:mm:ss a} %-5level [%thread] [%X{userId}] [%X{chatroom}] %logger{36} - %msg%n"/>
+    
+    <!-- Console Appender for Development -->
+    <!-- Outputs log messages to the console during development for easy readability -->
+    <appender name="COLORED_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Format the log messages with a timestamp, log level, thread info, logger name, and the message -->
+            <!-- %highlight enables colored output depending on the log level (INFO, DEBUG, etc.) -->
+            <pattern>%highlight(${LOG_PATTERN})</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Rolling File Appender for Log Rotation -->
+    <!-- Writes log messages to a file with automatic log rotation and retention limits -->
+    <appender name="ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- The primary log file where logs are written -->
+        <file>logs/rolling-application.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Define the file name pattern for rolled-over log files -->
+            <!-- Here, logs are rotated daily with the date appended to the file name -->
+            <fileNamePattern>logs/rolling-application.%d{dd-MM-yyyy}.log</fileNamePattern>
+
+            <!-- Retain rolled log files for a maximum of 15 days to save disk space -->
+            <maxHistory>15</maxHistory>
+
+            <!-- The Total disk usage cap for logs is set to 10GB -->
+            <!-- Older logs are deleted when this limit is reached, regardless of maxHistory -->
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <!-- Formats the log message with timestamp, log level, thread, logger name, and the log message -->
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Async Appender for Rolling File -->
+    <!-- Wraps the rolling file appender to enable asynchronous, non-blocking logging -->
+    <appender name="ASYNC_ROLLING_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- References the RollingFileAppender for handling actual log outputs -->
+        <appender-ref ref="ROLLING_FILE"/>
+
+        <!-- Configures the internal queue size to hold 5000 log events -->
+        <!-- This helps handle high-throughput systems during log bursts -->
+        <queueSize>5000</queueSize>
+
+        <!-- Discarding a threshold for lower-priority logs (DEBUG, TRACE) if the queue is full -->
+        <!-- Setting this to 0 ensures no logs are ever discarded -->
+        <discardingThreshold>0</discardingThreshold>
+
+        <!-- Whether to include method and class name info in logs -->
+        <!-- Leaving it false for better performance as caller data is not always needed -->
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <!-- Package-Specific Logging Levels -->
+    <!-- Configures log levels for specific packages to reduce log noise -->
+
+    <!-- Logs for the "com.unrecorded" package (main service logic) -->
+    <!-- Log at INFO level to ensure important service-level details are captured -->
+    <logger name="com.unrecorded" level="info"/>
+
+    <!-- Logs for Hibernate ORM -->
+    <!-- Log at WARN level to minimize verbose messages (e.g., SQL generation details) -->
+    <logger name="org.hibernate" level="warn"/>
+
+    <!-- Logs for Netty (low-level networking library) -->
+    <!-- Log at WARN level to suppress excessive low-level debugging details -->
+    <logger name="io.netty" level="warn"/>
+
+    <!-- Logs for Ktor framework -->
+    <!-- Log at INFO level to track server-related operations and events -->
+    <logger name="io.ktor" level="info"/>
+
+    <!-- Root Logger Configuration -->
+    <!-- The root logger establishes the default log level for the entire application -->
+    <!-- WARN level ensures only warnings, errors, and critical logs are captured globally -->
+    <root level="warn">
+        <!-- Logs to the console for real-time local monitoring -->
+        <appender-ref ref="COLORED_CONSOLE"/>
+        <!-- Logs to the rolling file asynchronously for production deployments -->
+        <appender-ref ref="ASYNC_ROLLING_FILE"/>
+    </root>
+</configuration>

@@ -1,14 +1,67 @@
-# VIA University College - Software Engineering Program - 3rd Semester Project
+# VIA University College - School of Technology and Business
+# Software Engineering Program - 3rd Semester Project
+#
+# This work is a part of the academic curriculum for the Software Engineering program at VIA University College.
+# It is intended only for educational and academic purposes.
+#
+# No part of this project may be reproduced or transmitted in any form or by any means,
+# except as permitted by VIA University and the course instructor.
+# All rights reserved by the contributors and VIA University College.
 #
 # Project Name: Unrecorded
-# Author: Sergiu Chirap, 2024
+# Author: Sergiu Chirap
+# Year: 2024
+
+#--------------------------------------------------------------------------------
+# Description:
+# This is the main configuration file for the Ktor-based application server.
+# It defines the server's runtime environment, deployment settings, performance
+# optimizations, and logging configurations.
 #
-# Intended for educational purposes only.
-# All rights reserved.
+# Note:
+# - HTTPS functionality is planned but not yet implemented.
+#   To use HTTPS, the necessary keystore and environment variable settings must be provided.
+# - REST API functionality is intended for future releases.
+#   However, the file contains optional placeholders for routing and content negotiation settings.
+#
+# Warning:
+# This file is intended for educational purposes only.
+#  Any use of this configuration or its derived works must adhere to proper acknowledgment.
+# -------------------------------------------------------------------------------
 
 ktor:
+  administration:
+    shutdownUrl: "/admin/shutdown"  # Securely shutdown endpoint (use with care).
   application:
     modules:
-      - com.unrecorded.ApplicationKt.module
+      - com.unrecorded.ktor.ApplicationKt.module
   deployment:
-    port: 8080
+    port: ${T3_PORT?8080} # Supports environment variable (T3_PORT) with default fallback of 8080
+    host: 0.0.0.0         # Allows external connections (useful in Docker or on cloud services)
+  # TODO: Provide sll keys and env to set up HTTPS.
+    ssl:
+      port: ${T3_SSLPORT?8443}          # Supports environment variable for SSL port (default 8443)
+      keyStore:
+        path: ssl/keystore.jks          # Path to your JKS keystore file
+        password: ${T3_KEYSTORE_PASS}   # Keystore password (from environment variable)
+        alias: https                    # Key alias within the keystore
+        keyPassword: ${T3_KEY_PASS}     # Key password (from environment variable)
+    forwardedHeaderSupport: "enabled"   # Recognizes X-Forwarded-* headers
+    watch:
+      - src             # Watch for changes in the source folder for live reloading
+  # TODO: Provide REST functionality.
+    routing:            # REST routes configuration (optional organizational improvement)
+      enabled: true     # Optional feature toggle for routing (add REST routes dynamically if needed). 
+  security:
+    enableCORS: true    # Enable Cross-Origin Resource Sharing (useful for REST API development).
+  logging:
+    level: INFO         # Log level (DEBUG, INFO, WARN, ERROR)
+    file: logs/app.log  # Output to a file (optional)
+  performance:
+    compression:
+      enabled: true     # Enable response compression for faster REST responses.
+      minSize: 1024     # Minimum response size (bytes) to trigger compression.
+    contentNegotiation: # Enable advanced REST response handling (JSON, XML, etc.).
+      formats:
+        - json
+        - xml

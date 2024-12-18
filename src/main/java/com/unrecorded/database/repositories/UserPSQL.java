@@ -1,4 +1,4 @@
-﻿/*
+/*
  * VIA University College - School of Technology and Business
  * Software Engineering Program - 3rd Semester Project
  *
@@ -216,7 +216,7 @@ public class UserPSQL implements IUserRepo {
      * @param email  The new email address to be set.
      * @throws DataAccessException If there is an issue with the database update.
      */
-    public void updateEmailAddress(@NotNull UUID userId, @NotNull String email) throws IllegalArgumentException, DataAccessException {
+    public void updateEmail(@NotNull UUID userId, @NotNull String email) throws IllegalArgumentException, DataAccessException {
         FieldValidator.emailConstraints(email);
         LoggerUtil.logInfo("Starting email update for userId: {}", userId.toString());
         LoggerUtil.logDebug("Sanitized email: {}", email);

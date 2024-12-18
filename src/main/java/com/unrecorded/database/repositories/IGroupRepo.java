@@ -1,4 +1,4 @@
-﻿/*
+/*
  * VIA University College - School of Technology and Business
  * Software Engineering Program - 3rd Semester Project
  *
@@ -104,8 +104,7 @@ public interface IGroupRepo {
     /**
      * Deletes a group from the database.
      *
-     * <p>This method performs a "soft delete," marking the group as inactive
-     * rather than completely removing it from the database to preserve audit data.</p>
+     * <p>This method performs a "complete delete", completely removing it from the database.</p>
      *
      * @param groupId The unique identifier (UUID) of the group.
      * @throws DataAccessException If an issue occurs during deletion operations.

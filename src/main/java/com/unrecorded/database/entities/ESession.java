@@ -1,4 +1,4 @@
-﻿/*
+/*
  * VIA University College - School of Technology and Business
  * Software Engineering Program - 3rd Semester Project
  *

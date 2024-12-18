@@ -1,4 +1,4 @@
-﻿/*
+/*
  * VIA University College - School of Technology and Business
  * Software Engineering Program - 3rd Semester Project
  *
@@ -56,20 +56,20 @@ public interface IUserRepo {
      *
      * <h3>Steps:</h3>
      * <ol>
-     *   <li>Validate the {@code username} and {@code emailAddress} fields.</li>
+     *   <li>Validate the {@code username} and {@code email} fields.</li>
      *   <li>Hash the plaintext password with a cryptographically secure salt.</li>
      *   <li>Create and persist the {@link EUser} entity.</li>
      * </ol>
      *
      * @param username The username for the new user. Must be unique and conform to validation rules.
      * @param password The plaintext password for the new user. It will be salted and hashed before being stored.
-     * @param emailAddress The email address for the new user. Must be valid and unique.
+     * @param email The email address for the new user. Must be valid and unique.
      * @param publicKey The RSA public key associated with the user.
      * @param privateKeyEncrypted The encrypted private RSA key of the user.
      * @throws IllegalArgumentException If validation fails for any parameter.
      * @throws DataAccessException If an error occurs while persisting, the user in the database.
      */
-    void createUser(@NotNull String username, @NotNull String password, @NotNull String emailAddress,
+    void createUser(@NotNull String username, @NotNull String password, @NotNull String email,
                     @NotNull String publicKey, @NotNull String privateKeyEncrypted) throws IllegalArgumentException, DataAccessException;
 
     /**
@@ -124,11 +124,11 @@ public interface IUserRepo {
      * <p>The email address is validated and must be unique before the update is committed.</p>
      *
      * @param userId The unique identifier (UUID) of the user to update.
-     * @param emailAddress The new email address to assign. Must pass validation checks.
-     * @throws IllegalArgumentException If the {@code emailAddress} is invalid.
+     * @param email The new email address to assign. Must pass validation checks.
+     * @throws IllegalArgumentException If the {@code email} is invalid.
      * @throws DataAccessException If there is an issue updating the database.
      */
-    void updateEmailAddress(@NotNull UUID userId, @NotNull String emailAddress) throws IllegalArgumentException, DataAccessException;
+    void updateEmail(@NotNull UUID userId, @NotNull String email) throws IllegalArgumentException, DataAccessException;
 
     /**
      * Updates the password of a user identified by their unique user ID.
